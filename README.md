@@ -1,6 +1,6 @@
 # RedditToTwitterAndFacebook
 
-This simple script loads submissions from a subreddit, validates whether they pass some criteria 
+This simple Python 3 script loads submissions from a subreddit, validates whether they pass some criteria 
 (currently if they have enough upvotes or come from a list of pre-approved users), and posts these 
 submissions to a Twitter account and a Facebook Page.
 
