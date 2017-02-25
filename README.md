@@ -12,3 +12,9 @@ Reddit, Twitter and Facebook to work.
 
 Before runnning, copy config.default.py to config.py and either set up all the required tokens and 
 values, or keep it as is and save the values in environment variables.
+
+Package dependencies:
+- praw
+- peewee
+- git+https://github.com/sixohsix/twitter.git#egg=Twitter
+- git+https://github.com/mobolic/facebook-sdk#egg=facebook-sdk
