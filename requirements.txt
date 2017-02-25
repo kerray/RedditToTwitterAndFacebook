@@ -1,0 +1,4 @@
+praw
+peewee
+git+https://github.com/sixohsix/twitter.git#egg=Twitter
+git+https://github.com/mobolic/facebook-sdk#egg=facebook-sdk
