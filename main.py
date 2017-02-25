@@ -87,6 +87,7 @@ def publish_fb(submission):
         }
         msg = submission.title + "\n\n?? https://www.reddit.com" + submission.permalink
         graph.put_wall_post(message=msg, attachment=attachment, profile_id=fb_page_profile_id)
+        print("POSTED TO FB:", msg)
         return True
     except Exception as E:
         print("FB ERROR", E)
