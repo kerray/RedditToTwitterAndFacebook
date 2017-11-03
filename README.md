@@ -18,9 +18,3 @@ __Package dependencies__
 - peewee
 - git+https://github.com/sixohsix/twitter.git#egg=Twitter
 - git+https://github.com/mobolic/facebook-sdk#egg=facebook-sdk
-
-__Future development__
-Maybe:
-- track post IDs in DB so that they can be later deleted or commented on
-- track sticky submissions and pin them to top of page
-- repost approved reddit comments to the linked FB post
