@@ -59,7 +59,7 @@ def publish_tw(submission):
 
         # submission title will be the tweet text - we shorten it and add link to reddit comments                         
         tweet = submission.title
-        if len(tweet) > 115: tweet = tweet[0:115] + "…"
+        if len(tweet) > 255: tweet = tweet[0:255] + "…"
         tweet = tweet + "\nhttps://www.reddit.com" + submission.permalink
 
         t.statuses.update(status=tweet)
