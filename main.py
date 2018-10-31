@@ -68,8 +68,8 @@ def publish_tw(submission):
 
         # submission title will be the tweet text - we shorten it and add link to reddit comments                         
         tweet = submission.title
-        if len(tweet) > 255: tweet = tweet[0:255] + "â€¦"
-#        if len(tweet) > 115: tweet = tweet[0:115] + "â€¦"
+        if len(tweet) > 255: tweet = tweet[0:255] + "…"
+#        if len(tweet) > 115: tweet = tweet[0:115] + "…"
         tweet = tweet + "\nhttps://www.reddit.com" + submission.permalink
 
         t.statuses.update(status=tweet)
@@ -95,7 +95,7 @@ def publish_fb(submission):
             #"description": submission.link_flair_text.upper(), # filled automatically from url metadata
             #"picture": "https://www.example.com/thumbnail.jpg" # filled automatically from url
         }
-        msg = submission.title + "\n\nđź’¬ https://www.reddit.com" + submission.permalink
+        msg = submission.title + "\n\n💬 https://www.reddit.com" + submission.permalink
         graph.put_wall_post(message=msg, attachment=attachment, profile_id=fb_page_profile_id)
         print("POSTED TO FB:", msg)
         return True
