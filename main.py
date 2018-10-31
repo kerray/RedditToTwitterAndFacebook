@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from peewee import *
 import praw
 import facebook
@@ -12,7 +14,8 @@ fb_page_profile_id = os.getenv("FB_PAGE_PROFILE_ID") or settings["fb_page_profil
 fb_graphapi_version = os.getenv("FB_GRAPHAPI_VERSION") or settings["fb_graphapi_version"]
 
 reddit_subreddit_name = os.getenv("SUBREDDIT_NAME") or settings["reddit_subreddit_name"]
-worthy_authors = os.getenv("WORTHY_AUTHORS") and os.environ["WORTHY_AUTHORS"].split(";") or settings["worthy_authors"]
+whitelisted_authors = os.getenv("WHITELISTED_AUTHORS") and os.environ["WHITELISTED_AUTHORS"].split(";") or settings["whitelisted_authors"]
+blacklisted_authors = os.getenv("BLACKLISTED_AUTHORS") and os.environ["BLACKLISTED_AUTHORS"].split(";") or settings["blacklisted_authors"]
 necessary_upvotes = os.getenv("NECESSARY_UPVOTES") and int(os.environ["NECESSARY_UPVOTES"]) or settings["necessary_upvotes"]
 reddit_post_limit = os.getenv("REDDIT_POST_LIMIT") and int(os.environ["REDDIT_POST_LIMIT"]) or settings["reddit_post_limit"]
 reddit_client_id = os.getenv("REDDIT_CLIENT_ID") or settings["reddit_client_id"]
@@ -48,9 +51,15 @@ class Article(Model):
     class Meta:
         database = db 
 
-def submission_worthy(submission):
-    return (submission.author in worthy_authors
-         or submission.ups >= necessary_upvotes)         
+def submission_whitelisted(submission):
+    return submission.author in whitelisted_authors
+
+def submission_upvoted(submission):
+     return submission.is_self and submission.ups >= (necessary_upvotes*1.8) \
+         or (not submission.is_self and submission.ups >= necessary_upvotes)
+
+def submission_blacklisted(submission):
+    return submission.author in blacklisted_authors
     
 def publish_tw(submission):
     """https://github.com/sixohsix/twitter"""
@@ -59,7 +68,8 @@ def publish_tw(submission):
 
         # submission title will be the tweet text - we shorten it and add link to reddit comments                         
         tweet = submission.title
-        if len(tweet) > 255: tweet = tweet[0:255] + "…"
+        if len(tweet) > 255: tweet = tweet[0:255] + "â€¦"
+#        if len(tweet) > 115: tweet = tweet[0:115] + "â€¦"
         tweet = tweet + "\nhttps://www.reddit.com" + submission.permalink
 
         t.statuses.update(status=tweet)
@@ -85,7 +95,7 @@ def publish_fb(submission):
             #"description": submission.link_flair_text.upper(), # filled automatically from url metadata
             #"picture": "https://www.example.com/thumbnail.jpg" # filled automatically from url
         }
-        msg = submission.title + "\n\n?? https://www.reddit.com" + submission.permalink
+        msg = submission.title + "\n\nđź’¬ https://www.reddit.com" + submission.permalink
         graph.put_wall_post(message=msg, attachment=attachment, profile_id=fb_page_profile_id)
         print("POSTED TO FB:", msg)
         return True
@@ -121,11 +131,15 @@ def validate_and_repost_submissions():
               "UPVOTES:", submission.ups, 
               "TITLE:", submission.title)
               
-        if not submission_worthy(submission): 
-            print("NOT WORTHY (YET?), SKIPPING\n")
+        if submission_blacklisted(submission): 
+            print("AUTHOR BLACKLISTED, SKIPPING\n")
+            continue
+            
+        if not submission_whitelisted(submission) and not submission_upvoted(submission):
+            print("NOT ENOUGH UPVOTES\n")
             continue
         
-        # if the submission is worthy of reposting and doesn"t exist in db, create it 
+        # if the submission is whitelisted of reposting and doesn"t exist in db, create it 
         if not article:
             modified = True
             article = Article.create(urlid = submission.id, 
