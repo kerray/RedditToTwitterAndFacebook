@@ -4,7 +4,8 @@ settings["fb_page_profile_id"] = ""
 settings["fb_graphapi_version"] = "2.8"
 
 settings["reddit_subreddit_name"] = ""
-settings["worthy_authors"] = ("kerray",)
+settings["whitelisted_authors"] = ("kerray",)
+settings["blacklisted_authors"] = ()
 settings["necessary_upvotes"] = 3
 settings["reddit_post_limit"] = 5
 settings["reddit_client_id"] = ""
