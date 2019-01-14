@@ -41,7 +41,7 @@ class Article(Model):
     
     def __str__(self):
         r = {}
-        for k in self._data.keys():
+        for k in self.__data__.keys():
           try:
              r[k] = str(getattr(self, k))
           except:
@@ -68,8 +68,7 @@ def publish_tw(submission):
 
         # submission title will be the tweet text - we shorten it and add link to reddit comments                         
         tweet = submission.title
-        if len(tweet) > 255: tweet = tweet[0:255] + "…"
-#        if len(tweet) > 115: tweet = tweet[0:115] + "…"
+        if len(tweet) > 254: tweet = tweet[0:254] + "…"
         tweet = tweet + "\nhttps://www.reddit.com" + submission.permalink
 
         t.statuses.update(status=tweet)
