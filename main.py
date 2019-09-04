@@ -54,6 +54,9 @@ class Article(Model):
 def submission_whitelisted(submission):
     return submission.author in whitelisted_authors
 
+def submission_offtopic(submission):
+    return "offtopic" in submission.link_flair_text
+
 def submission_upvoted(submission):
      return submission.is_self and submission.ups >= (necessary_upvotes*1.8) \
          or (not submission.is_self and submission.ups >= necessary_upvotes)
@@ -132,6 +135,10 @@ def validate_and_repost_submissions():
               
         if submission_blacklisted(submission): 
             print("AUTHOR BLACKLISTED, SKIPPING\n")
+            continue
+            
+        if submission_offtopic(submission): 
+            print("SUBMISSION OFFTOPIC, SKIPPING\n")
             continue
             
         if not submission_whitelisted(submission) and not submission_upvoted(submission):
