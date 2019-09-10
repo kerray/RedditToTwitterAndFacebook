@@ -55,7 +55,7 @@ def submission_whitelisted(submission):
     return submission.author in whitelisted_authors
 
 def submission_offtopic(submission):
-    return "offtopic" in submission.link_flair_text
+    return submission.link_flair_text and "offtopic" in submission.link_flair_text or False
 
 def submission_upvoted(submission):
      return submission.is_self and submission.ups >= (necessary_upvotes*1.8) \
