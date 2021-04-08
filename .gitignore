@@ -97,3 +97,8 @@ config.py
 
 # do not store the codenvy config
 .codenvy.json
+.mypy_cache/
+.pytest_cache/
+.venv/
+.vscode/
+.code-workspace

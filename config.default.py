@@ -1,4 +1,4 @@
-settings = {}
+settings  = {}
 settings["fb_page_permanent_access_token"] = ""
 settings["fb_page_profile_id"] = ""
 settings["fb_graphapi_version"] = "2.8"
