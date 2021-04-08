@@ -43,7 +43,7 @@ class RedditToTwitterAndFacebook:
             if len(tweet) > 254: tweet = tweet[0:254] + "…"
             tweet = f'{tweet}\nhttps://www.reddit.com{submission.permalink}'
 
-            #t.statuses.update(status=tweet)
+            t.statuses.update(status=tweet)
 
             print("TWEET:", tweet)
             return True
@@ -69,7 +69,7 @@ class RedditToTwitterAndFacebook:
             }
             msg = f'{submission.title}\n\n💬 https://www.reddit.com{submission.permalink}'
 
-            #graph.put_wall_post(message=msg, attachment=attachment, profile_id=self.fb_page_profile_id)
+            graph.put_wall_post(message=msg, attachment=attachment, profile_id=self.fb_page_profile_id)
             
             print("POSTED TO FB:", msg)
             return True
