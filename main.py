@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from peewee import Database, SqliteDatabase
+from peewee import Database, SqliteDatabase, OperationalError
 import praw
 import facebook
 from twitter import Twitter, OAuth
@@ -8,11 +8,11 @@ from pprint import pprint
 import requests
 import os
 from config import settings
-from models import Post, Comment
-from typing import Dict, Any
+from models import Article, Comment
+from typing import Mapping, Any
 
 class RedditToTwitterAndFacebook:
-    def __init__(self, settingsinst : Dict[str,object]):
+    def __init__(self, settingsinst : Mapping[str,object]):
         self.db : Database = None 
         self.options(settingsinst or settings)
 
@@ -41,9 +41,10 @@ class RedditToTwitterAndFacebook:
             # submission title will be the tweet text - we shorten it and add link to reddit comments                         
             tweet = submission.title
             if len(tweet) > 254: tweet = tweet[0:254] + "…"
-            tweet = tweet + "\nhttps://www.reddit.com" + submission.permalink
+            tweet = f'{tweet}\nhttps://www.reddit.com{submission.permalink}'
 
-            t.statuses.update(status=tweet)
+            #t.statuses.update(status=tweet)
+
             print("TWEET:", tweet)
             return True
         except Exception as E:
@@ -66,29 +67,30 @@ class RedditToTwitterAndFacebook:
                 #"description": submission.link_flair_text.upper(), # filled automatically from url metadata
                 #"picture": "https://www.example.com/thumbnail.jpg" # filled automatically from url
             }
-            msg = submission.title + "\n\n💬 https://www.reddit.com" + submission.permalink
+            msg = f'{submission.title}\n\n💬 https://www.reddit.com{submission.permalink}'
 
-            graph.put_wall_post(
-                                message=msg, 
-                                attachment=attachment, 
-                                profile_id=self.fb_page_profile_id
-                            )
+            #graph.put_wall_post(message=msg, attachment=attachment, profile_id=self.fb_page_profile_id)
+            
             print("POSTED TO FB:", msg)
             return True
         except Exception as E:
             print("FB ERROR", E)
             return False
 
-
     def init_db(self):
         """Only really needs to be executed the first time the script is running"""
         try:
             self.db = SqliteDatabase(self.sqlite_db_filename)
-            self.db.connect()
-            if not Post.table_exists():
-                db.create_tables([Post,])
+            try:
+                self.db.connect()
+            except OperationalError as OE:
+                print(f"Warning when connecting to db: {OE}")
+            Article.bind(self.db)
+            Comment.bind(self.db)
+            if not Article.table_exists():
+                self.db.create_tables([Article,])
             if not Comment.table_exists():
-                db.create_tables([Comment,])
+                self.db.create_tables([Comment,])
         except Exception as E:
             print("DB problem:", E)
 
@@ -100,29 +102,29 @@ class RedditToTwitterAndFacebook:
             modified = False
             
             # try to find existing db entry for this submission to see if it was already posted
-            posts = Post.select().where(Post.urlid == submission.id)
-            post = post and posts.get() or None
+            posts = Article.select().where(Article.urlid == submission.id)
+            post = posts and posts.get() or None
 
             print("ENTRY ID:", submission.id, 
                 "UPVOTES:", submission.ups, 
                 "TITLE:", submission.title)
                 
-            if submission_blacklisted(submission): 
+            if self.submission_blacklisted(submission): 
                 print("AUTHOR BLACKLISTED, SKIPPING\n")
                 continue
                 
-            if submission_offtopic(submission): 
+            if self.submission_offtopic(submission): 
                 print("SUBMISSION OFFTOPIC, SKIPPING\n")
                 continue
                 
-            if not submission_whitelisted(submission) and not submission_upvoted(submission):
+            if not self.submission_whitelisted(submission) and not self.submission_upvoted(submission):
                 print("NOT ENOUGH UPVOTES\n")
                 continue
             
             # if the submission is whitelisted of reposting and doesn"t exist in db, create it 
             if not post:
                 modified = True
-                post = Post.create(urlid = submission.id, 
+                post = Article.create(urlid = submission.id, 
                                     text = submission.title,
                                     created = submission.created,
                                     author = submission.author,
@@ -132,12 +134,12 @@ class RedditToTwitterAndFacebook:
 
             # if the submission wasn"t reposted to Twitter yet, try to post it
             if not post.published_tw:        
-                post.published_tw = publish_tw(submission)
+                post.published_tw = self.publish_tw(submission)
                 if post.published_tw: modified = True
 
             # if the submission wasn"t reposted to Facebook yet, try to post it            
             if not post.published_fb:
-                post.published_fb = publish_fb(submission)
+                post.published_fb = self.publish_fb(submission)
                 if post.published_fb: modified = True                
             
             if modified: post.save()
@@ -145,10 +147,8 @@ class RedditToTwitterAndFacebook:
             print("SUBMISSION STATE:", post, "\n")
 
     def main(self):
-        options = Options()
         self.init_db()
-        Post.bind(self.db)
-        Comment.bind(self.db)
+
         self.reddit = praw.Reddit(client_id=self.reddit_client_id,
                             client_secret=self.reddit_client_secret,
                             user_agent=self.reddit_app_user_agent)
@@ -177,5 +177,5 @@ class RedditToTwitterAndFacebook:
         self.sqlite_db_filename = os.getenv("SQLITE_DB_FILENAME") or settings["sqlite_db_filename"]
 
 if __name__== "__main__":
-    instance = RedditToTwitterAndFacebook()
+    instance = RedditToTwitterAndFacebook(settings)
     instance.main()

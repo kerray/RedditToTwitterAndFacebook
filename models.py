@@ -1,4 +1,5 @@
-from peewee import Model, CharField, BooleanField, DateField
+from peewee import Model, CharField, BooleanField, DateField, ForeignKeyField
+import json
 
 class Article(Model):
     """Database of posts this script has already processed and their state - have they been posted to FB and TW or not?"""
@@ -16,11 +17,7 @@ class Article(Model):
              r[k] = str(getattr(self, k))
           except:
              r[k] = json.dumps(getattr(self, k))
-        return str(r)
-
-    class Meta:
-        table_name = "Article" # OBSOLETE - use only for old databases
-    
+        return str(r)  
 
 class Comment(Model):
     """Database of comments this script has already processed and their state - have they been posted to FB and TW or not?"""
@@ -28,7 +25,7 @@ class Comment(Model):
     text = CharField()
     created = DateField()
     author = CharField()
-    post = ForeignKeyField(Article, 
+    post = ForeignKeyField(Article) 
     published_tw = BooleanField()
     published_fb = BooleanField()
     
